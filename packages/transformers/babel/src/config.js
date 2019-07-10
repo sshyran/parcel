@@ -7,6 +7,17 @@ import getFlowConfig from './flow';
 import path from 'path';
 import * as fs from '@parcel/fs';
 
+type BabelConfig = {
+  plugins?: Array<any>,
+  presets?: Array<any>
+};
+
+type WrappedBabelConfig = {
+  internal: boolean,
+  babelVersion: number,
+  config: BabelConfig
+};
+
 const NODE_MODULES = `${path.sep}node_modules${path.sep}`;
 
 export default async function getBabelConfig(asset: MutableAsset) {
@@ -24,8 +35,7 @@ export default async function getBabelConfig(asset: MutableAsset) {
   let babelrc = await getBabelRc(asset, pkg, isSource);
   isSource = isSource || !!babelrc;
 
-  let result = {};
-  mergeConfigs(result, babelrc);
+  let result = babelrc;
 
   // Add a generated babel-preset-env config if it is not already specified in the babelrc
   let hasEnv =
@@ -38,7 +48,7 @@ export default async function getBabelConfig(asset: MutableAsset) {
 
   if (!hasEnv) {
     let envConfig = await getEnvConfig(asset, isSource);
-    mergeConfigs(result, envConfig);
+    result = mergeConfigs(result, envConfig);
   }
 
   // Add JSX config if it isn't already specified in the babelrc
@@ -57,7 +67,7 @@ export default async function getBabelConfig(asset: MutableAsset) {
 
   if (!hasReact) {
     let jsxConfig = await getJSXConfig(asset, pkg, isSource);
-    mergeConfigs(result, jsxConfig);
+    result = mergeConfigs(result, jsxConfig);
   }
 
   // Add Flow stripping config if it isn't already specified in the babelrc
@@ -71,22 +81,22 @@ export default async function getBabelConfig(asset: MutableAsset) {
 
   if (!hasFlow) {
     let flowConfig = await getFlowConfig(asset);
-    mergeConfigs(result, flowConfig);
+    result = mergeConfigs(result, flowConfig);
   }
 
   return result;
 }
 
-function mergeConfigs(result, config) {
+function mergeConfigs(result, config?: null | WrappedBabelConfig) {
   if (
     !config ||
     ((!config.config.presets || config.config.presets.length === 0) &&
       (!config.config.plugins || config.config.plugins.length === 0))
   ) {
-    return;
+    return result;
   }
 
-  let merged = result[config.babelVersion];
+  let merged = result;
   if (merged) {
     merged.config.presets = (merged.config.presets || []).concat(
       config.config.presets || []
@@ -95,8 +105,10 @@ function mergeConfigs(result, config) {
       config.config.plugins || []
     );
   } else {
-    result[config.babelVersion] = config;
+    result = config;
   }
+
+  return result;
 }
 
 function hasPlugin(arr, plugins) {
