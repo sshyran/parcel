@@ -4,12 +4,17 @@ import SourceMap from '@parcel/source-map';
 import generate from '@babel/generator';
 import semver from 'semver';
 import babel7 from './babel7';
-import getBabelConfig from './config';
+//import getBabelConfig from './config';
 import {relativeUrl} from '@parcel/utils';
+import loadConfig from './loadConfig';
 
 export default new Transformer({
-  async getConfig({asset}) {
-    return getBabelConfig(asset);
+  // async getConfig({asset}) {
+  //   return getBabelConfig(asset);
+  // },
+
+  async loadConfig(config) {
+    loadConfig(config);
   },
 
   canReuseAST({ast}) {

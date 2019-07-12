@@ -18,11 +18,7 @@ const JSX_PRAGMA = {
  * Generates a babel config for JSX. Attempts to detect react or react-like libraries
  * and changes the pragma accordingly.
  */
-export default async function getJSXConfig(
-  asset: MutableAsset,
-  pkg: ?PackageJSON,
-  isSourceModule: boolean
-) {
+export default async function getJSXConfig({searchPath, pkg, isSourceModule}) {
   // Don't enable JSX in node_modules
   if (!isSourceModule) {
     return null;
@@ -41,13 +37,9 @@ export default async function getJSXConfig(
     }
   }
 
-  if (pragma || JSX_EXTENSIONS[path.extname(asset.filePath)]) {
+  if (pragma || JSX_EXTENSIONS[path.extname(searchPath)]) {
     return {
-      internal: true,
-      babelVersion: 7,
-      config: {
-        plugins: [[require('@babel/plugin-transform-react-jsx'), {pragma}]]
-      }
+      plugins: [[require('@babel/plugin-transform-react-jsx'), {pragma}]]
     };
   }
 }

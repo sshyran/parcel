@@ -292,6 +292,34 @@ export interface Asset extends BaseAsset {
   +stats: Stats;
 }
 
+// TODO: figure out naming
+export interface ConfigClass {
+  searchPath: FilePath;
+  env: Environment;
+  options: ParcelOptions;
+  resolvedPath: ?FilePath;
+  result: ?any;
+  resultHash: ?string;
+  includedFiles: Set<FilePath>;
+  watchGlob: ?Glob;
+  devDeps: Map<PackageName, ?string>;
+  pkg: ?PackageJSON;
+
+  setResolvedPath(filePath: FilePath): void;
+  setResult(result: any): void; // TODO: fix
+  setResultHash(resultHash: string): void;
+  addIncludedFile(filePath: FilePath): void;
+  setDevDep(name: PackageName, version?: Semver): void;
+  getDevDepVersion(name: PackageName): Semver;
+  setWatchGlob(glob: string): void;
+  getConfig(
+    filePaths: Array<FilePath>,
+    options: ?{packageKey?: string, parse?: boolean}
+  ): Promise<Config | null>;
+  getPackage(): Promise<PackageJSON | null>;
+  isSource(): boolean;
+}
+
 export type Stats = {|
   time: number,
   size: number

@@ -368,6 +368,7 @@ export default class Asset {
   }
 
   async getPackage(): Promise<PackageJSON | null> {
-    return this.getConfig(['package.json']);
+    let x = await this.getConfig(['package.json']);
+    return x;
   }
 }

@@ -225,6 +225,7 @@ export default class Transformation {
   async loadPipeline(filePath: FilePath): Promise<Pipeline> {
     let configRequest = {
       filePath,
+      env: this.request.env,
       meta: {
         actionType: 'transformation'
       }
@@ -250,7 +251,7 @@ export default class Transformation {
     }
 
     let pipeline = new Pipeline({
-      id: parcelConfig.getTransformerNames(filePath),
+      pipeline: parcelConfig.getTransformerNames(filePath),
       transformers: await parcelConfig.getTransformers(filePath),
       configs,
       options: this.options
@@ -282,6 +283,7 @@ export default class Transformation {
   ): Promise<Config> {
     let configRequest = {
       filePath,
+      env: this.request.env,
       plugin,
       meta: {
         parcelConfigPath
@@ -307,9 +309,14 @@ class Pipeline {
   generate: GenerateFunc;
   postProcess: ?PostProcessFunc;
 
-  constructor({id, transformers, configs, options}: PipelineOpts) {
-    this.id = id;
-    this.transformers = transformers;
+  constructor({pipeline, transformers, configs, options}: PipelineOpts) {
+    this.id = JSON.stringify(pipeline);
+
+    this.transformers = pipeline.map((name, i) => ({
+      name,
+      config: configs[name],
+      transformer: transformers[i]
+    }));
     this.configs = configs;
     this.options = options;
     let parcelConfig = nullthrows(this.configs.get('parcel'));
@@ -332,7 +339,8 @@ class Pipeline {
         } else {
           let transformerResults = await this.runTransformer(
             asset,
-            transformer
+            transformer.transformer, // TODO: fix
+            transformer.config
           );
           for (let result of transformerResults) {
             resultingAssets.push(asset.createChildAsset(result));
@@ -351,7 +359,8 @@ class Pipeline {
 
   async runTransformer(
     asset: InternalAsset,
-    transformer: Transformer
+    transformer: Transformer,
+    preloadedConfig: Config // TODO: pick a better name
   ): Promise<Array<TransformerResult>> {
     const resolve = async (from: FilePath, to: string): Promise<FilePath> => {
       return (await this.resolverRunner.resolve(
@@ -364,7 +373,7 @@ class Pipeline {
     };
 
     // Load config for the transformer.
-    let config = null;
+    let config = preloadedConfig;
     if (transformer.getConfig) {
       config = await transformer.getConfig({
         asset: new MutableAsset(asset),
