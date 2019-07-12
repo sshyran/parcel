@@ -314,10 +314,12 @@ class Pipeline {
 
     this.transformers = pipeline.map((name, i) => ({
       name,
-      config: configs[name],
+      config: configs.get(name)?.result,
       transformer: transformers[i]
     }));
+    console.log('TRANSFORMERS', this.transformers);
     this.configs = configs;
+    console.log('CONFIGS', this.configs);
     this.options = options;
     let parcelConfig = nullthrows(this.configs.get('parcel'));
     parcelConfig = nullthrows(parcelConfig.result);
@@ -381,6 +383,8 @@ class Pipeline {
         resolve
       });
     }
+
+    console.log('CONFIG', config);
 
     // If an ast exists on the asset, but we cannot reuse it,
     // use the previous transform to generate code that we can re-parse.

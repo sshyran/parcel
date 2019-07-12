@@ -32,78 +32,78 @@ export default class TargetResolver {
     let optionTargets = initialOptions.targets;
 
     let targets: Array<Target>;
-    if (optionTargets) {
-      if (Array.isArray(optionTargets)) {
-        if (optionTargets.length === 0) {
-          throw new Error('Targets was an empty array');
-        }
+    // if (optionTargets) {
+    //   if (Array.isArray(optionTargets)) {
+    //     if (optionTargets.length === 0) {
+    //       throw new Error('Targets was an empty array');
+    //     }
 
-        // If an array of strings is passed, it's a filter on the resolved package
-        // targets. Load them, and find the matching targets.
-        let packageTargets = await this.resolvePackageTargets(rootDir);
-        targets = optionTargets.map(target => {
-          let matchingTarget = packageTargets.get(target);
-          if (!matchingTarget) {
-            throw new Error(`Could not find target with name ${target}`);
-          }
-          return matchingTarget;
-        });
-      } else {
-        // Otherwise, it's an object map of target descriptors (similar to those
-        // in package.json). Adapt them to native targets.
-        targets = Object.entries(optionTargets).map(([name, _descriptor]) => {
-          // $FlowFixMe
-          let descriptor: TargetDescriptor = _descriptor;
-          return {
-            name,
-            distDir: path.resolve(descriptor.distDir),
-            publicUrl: descriptor.publicUrl,
-            env: new Environment(descriptor),
-            sourceMap: descriptor.sourceMap
-          };
-        });
-      }
+    //     // If an array of strings is passed, it's a filter on the resolved package
+    //     // targets. Load them, and find the matching targets.
+    //     let packageTargets = await this.resolvePackageTargets(rootDir);
+    //     targets = optionTargets.map(target => {
+    //       let matchingTarget = packageTargets.get(target);
+    //       if (!matchingTarget) {
+    //         throw new Error(`Could not find target with name ${target}`);
+    //       }
+    //       return matchingTarget;
+    //     });
+    //   } else {
+    //     // Otherwise, it's an object map of target descriptors (similar to those
+    //     // in package.json). Adapt them to native targets.
+    //     targets = Object.entries(optionTargets).map(([name, _descriptor]) => {
+    //       // $FlowFixMe
+    //       let descriptor: TargetDescriptor = _descriptor;
+    //       return {
+    //         name,
+    //         distDir: path.resolve(descriptor.distDir),
+    //         publicUrl: descriptor.publicUrl,
+    //         env: new Environment(descriptor),
+    //         sourceMap: descriptor.sourceMap
+    //       };
+    //     });
+    //   }
 
-      if (initialOptions.serve) {
-        // In serve mode, we only support a single browser target. If the user
-        // provided more than one, or the matching target is not a browser, throw.
-        if (targets.length > 1) {
-          throw new Error(
-            'More than one target is not supported in serve mode'
-          );
-        }
-        if (targets[0].env.context !== 'browser') {
-          throw new Error('Only browser targets are supported in serve mode');
-        }
-      }
-    } else {
-      // Explicit targets were not provided. Either use a modern target for server
-      // mode, or simply use the package.json targets.
-      if (initialOptions.serve) {
-        // In serve mode, we only support a single browser target. Since the user
-        // hasn't specified a target, use one targeting modern browsers for development
-        let serveOptions = initialOptions.serve;
-        targets = [
-          {
-            name: 'default',
-            // For serve, write the `dist` to inside the parcel cache, which is
-            // temporary, likely in a .gitignore or similar, but still readily
-            // available for introspection by the user if necessary.
-            distDir: path.resolve(cacheDir, DEFAULT_DIST_DIRNAME),
-            publicUrl: serveOptions.publicUrl ?? '/',
-            env: new Environment({
-              context: 'browser',
-              engines: {
-                browsers: DEVELOPMENT_BROWSERS
-              }
-            })
-          }
-        ];
-      } else {
-        let packageTargets = await this.resolvePackageTargets(rootDir);
-        targets = Array.from(packageTargets.values());
-      }
-    }
+    //   if (initialOptions.serve) {
+    //     // In serve mode, we only support a single browser target. If the user
+    //     // provided more than one, or the matching target is not a browser, throw.
+    //     if (targets.length > 1) {
+    //       throw new Error(
+    //         'More than one target is not supported in serve mode'
+    //       );
+    //     }
+    //     if (targets[0].env.context !== 'browser') {
+    //       throw new Error('Only browser targets are supported in serve mode');
+    //     }
+    //   }
+    // } else {
+    //   // Explicit targets were not provided. Either use a modern target for server
+    //   // mode, or simply use the package.json targets.
+    //   if (initialOptions.serve) {
+    //     // In serve mode, we only support a single browser target. Since the user
+    //     // hasn't specified a target, use one targeting modern browsers for development
+    //     let serveOptions = initialOptions.serve;
+    //     targets = [
+    //       {
+    //         name: 'default',
+    //         // For serve, write the `dist` to inside the parcel cache, which is
+    //         // temporary, likely in a .gitignore or similar, but still readily
+    //         // available for introspection by the user if necessary.
+    //         distDir: path.resolve(cacheDir, DEFAULT_DIST_DIRNAME),
+    //         publicUrl: serveOptions.publicUrl ?? '/',
+    //         env: new Environment({
+    //           context: 'browser',
+    //           engines: {
+    //             browsers: DEVELOPMENT_BROWSERS
+    //           }
+    //         })
+    //       }
+    //     ];
+    //   } else {
+    let packageTargets = await this.resolvePackageTargets(rootDir);
+    targets = Array.from(packageTargets.values());
+    //   }
+    // }
 
     return targets;
   }
